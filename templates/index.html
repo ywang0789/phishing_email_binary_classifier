@@ -13,6 +13,7 @@
     </form>
     {% if prediction is not none %}
         <h2>Prediction: {{ prediction }}</h2>
+        <h3>Confidence Level: {{ confidence_level }}%</h3>
     {% endif %}
 </body>
 </html>
