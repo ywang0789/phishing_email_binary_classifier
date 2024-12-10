@@ -4,7 +4,6 @@ helper to read csv files
 
 import pandas
 
-DATASET_FILE_PATH = "./data/Phishing_Email.csv"
 DATASET_TRAIN_FILE_PATH = "./data/dataset_train.csv"
 DATASET_TEST_FILE_PATH = "./data/dataset_test.csv"
 
