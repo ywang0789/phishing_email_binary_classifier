@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Email Phishing Detection</title>
+</head>
+<body>
+    <h1>Email Phishing Detection</h1>
+    <form method="post">
+        <label for="email_text">Enter email text:</label><br>
+        <textarea id="email_text" name="email_text" rows="10" cols="50"></textarea><br><br>
+        <input type="submit" value="Submit">
+    </form>
+    {% if prediction is not none %}
+        <h2>Prediction: {{ prediction }}</h2>
+    {% endif %}
+</body>
+</html>
