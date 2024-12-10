@@ -5,11 +5,13 @@ helper to read csv files
 import pandas
 
 DATASET_FILE_PATH = "./data/Phishing_Email.csv"
+DATASET_TRAIN_FILE_PATH = "./data/dataset_train.csv"
+DATASET_TEST_FILE_PATH = "./data/dataset_test.csv"
 
 
 class DatasetReader:
-    def __init__(self):
-        self.file_path = DATASET_FILE_PATH
+    def __init__(self, file_path: str):
+        self.file_path = file_path
         self.num_rows = self._get_total_rows()
 
     def get_row(self, row_index: int) -> tuple:
