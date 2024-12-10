@@ -41,6 +41,7 @@ class DatasetReader:
 
 
 if __name__ == "__main__":
-    reader = DatasetReader()
-    print(reader.num_rows)
-    print(reader.get_row(1000)[1])
+    train_reader = DatasetReader(DATASET_TRAIN_FILE_PATH)
+    test_reader = DatasetReader(DATASET_TEST_FILE_PATH)
+    print(train_reader.num_rows)
+    print(test_reader.num_rows)
