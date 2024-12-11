@@ -1,4 +1,5 @@
-# Neural Network Binary Classifier For Phishing Emails
+# Binary Classifier For Phishing Emails
+SECU73030 course project
  
 ## Datasets used
 
