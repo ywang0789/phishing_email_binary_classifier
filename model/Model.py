@@ -1,65 +1,36 @@
 import copy
 import pickle
 
-import numpy as np
-import pandas as pd
+import numpy
+import pandas
 from sklearn.feature_extraction.text import CountVectorizer
 
-
-def sigmoid(x):
-
-    s = 1 / (1 + np.exp(-x))
-
-    return s
+from model.formulas import cost_b_derivative, cost_func, cost_w_derivative, sigmoid
 
 
-def sigmoid_derivative(x):
-    s = sigmoid(x)
-    return s * (1 - s)
-
-
-def loss(y_true, y_pred):
-    loss = -(y_true * np.log(y_pred) + (1 - y_true) * np.log(1 - y_pred))
-    return loss
-
-
-def cost(y_true, y_pred, m):
-    cost = 1 / m * np.sum(loss(y_true, y_pred))
-    return cost
-
-
-def cost_w_derivative(X, y_true, y_pred, m):
-    dw = 1 / m * np.dot(X, (y_pred - y_true).T)
-    return dw
-
-
-def cost_b_derivative(y_true, y_pred, m):
-    db = 1 / m * np.sum(y_pred - y_true)
-    return db
-
-
-def initialize_with_zeros(dim):
-    w = np.zeros((dim, 1))
+def initialize(feature_dimension):
+    w = numpy.zeros((feature_dimension, 1))
     b = 0.0
     return w, b
 
 
-def propagate(w, b, X, Y):
-    m = X.shape[1]
-    A = sigmoid(np.dot(w.T, X) + b)
-    cost = -1 / m * (np.sum(Y * np.log(A) + (1 - Y) * np.log(1 - A)))
+def propagate(w, b, X, Y_true):
+    num_dataset = X.shape[1]
+    Y_pred = sigmoid(numpy.dot(w.T, X) + b)
 
-    dw = 1 / m * np.dot(X, (A - Y).T)
-    db = 1 / m * np.sum(A - Y)
+    cost = cost_func(Y_true, Y_pred, num_dataset)
 
-    cost = np.squeeze(np.array(cost))
+    dw = cost_w_derivative(X, Y_true, Y_pred, num_dataset)
+    db = cost_b_derivative(Y_true, Y_pred, num_dataset)
 
-    grads = {"dw": dw, "db": db}
+    cost = numpy.squeeze(numpy.array(cost))  # scalar
 
-    return grads, cost
+    gradients = {"dw": dw, "db": db}
+
+    return gradients, cost
 
 
-def optimize(w, b, X, Y, num_iterations=100, learning_rate=0.009, print_cost=False):
+def optimize(w, b, X, Y, num_iterations, learning_rate):
 
     w = copy.deepcopy(w)
     b = copy.deepcopy(b)
@@ -68,38 +39,36 @@ def optimize(w, b, X, Y, num_iterations=100, learning_rate=0.009, print_cost=Fal
 
     for i in range(num_iterations):
 
-        grads, cost = propagate(w, b, X, Y)
+        gradients, cost = propagate(w, b, X, Y)
 
-        dw = grads["dw"]
-        db = grads["db"]
+        dw = gradients["dw"]
+        db = gradients["db"]
 
         w = w - learning_rate * dw
         b = b - learning_rate * db
 
         if i % 100 == 0:
             costs.append(cost)
-
-            if print_cost:
-                print("Cost after iteration %i: %f" % (i, cost))
+            print("Cost after iteration %i: %f" % (i, cost))
 
     params = {"w": w, "b": b}
 
-    grads = {"dw": dw, "db": db}
+    gradients = {"dw": dw, "db": db}
 
-    return params, grads, costs
+    return params, gradients, costs
 
 
 def predict(w, b, X):
 
     m = X.shape[1]
-    Y_prediction = np.zeros((1, m))
+    Y_prediction = numpy.zeros((1, m))
     w = w.reshape(X.shape[0], 1)
 
-    A = sigmoid(np.dot(w.T, X) + b)
+    Y_pred = sigmoid(numpy.dot(w.T, X) + b)
 
-    for i in range(A.shape[1]):
+    for i in range(Y_pred.shape[1]):
 
-        if A[0, i] > 0.5:
+        if Y_pred[0, i] > 0.5:
             Y_prediction[0, i] = 1
         else:
             Y_prediction[0, i] = 0
@@ -112,14 +81,14 @@ def model(
     Y_train,
     X_test,
     Y_test,
-    num_iterations=2000,
-    learning_rate=0.5,
-    print_cost=False,
+    num_iterations,
+    learning_rate,
 ):
 
-    w, b = initialize_with_zeros(X_train.shape[0])
+    w, b = initialize(X_train.shape[0])
+
     params, grads, costs = optimize(
-        w, b, X_train, Y_train, num_iterations, learning_rate, print_cost
+        w, b, X_train, Y_train, num_iterations, learning_rate
     )
 
     w = params["w"]
@@ -128,19 +97,12 @@ def model(
     Y_prediction_test = predict(w, b, X_test)
     Y_prediction_train = predict(w, b, X_train)
 
-    if print_cost:
-        print(
-            "train accuracy: {} %".format(
-                100 - np.mean(np.abs(Y_prediction_train - Y_train)) * 100
-            )
-        )
-        print(
-            "test accuracy: {} %".format(
-                100 - np.mean(np.abs(Y_prediction_test - Y_test)) * 100
-            )
-        )
+    train_acc = 100 - numpy.mean(numpy.abs(Y_prediction_train - Y_train)) * 100
+    test_acc = 100 - numpy.mean(numpy.abs(Y_prediction_test - Y_test)) * 100
+    print(f"train accuracy: {train_acc} %")
+    print(f"test accuracy: {test_acc} %")
 
-    d = {
+    data = {
         "costs": costs,
         "Y_prediction_test": Y_prediction_test,
         "Y_prediction_train": Y_prediction_train,
@@ -150,7 +112,7 @@ def model(
         "num_iterations": num_iterations,
     }
 
-    return d
+    return data
 
 
 def save_model(model, vectorizer, file_path):
@@ -170,7 +132,7 @@ class Preprocessor:
         self.vectorizer = CountVectorizer(max_features=1000, stop_words="english")
 
     def load_and_process_data(self, file_path):
-        data = pd.read_csv(file_path)
+        data = pandas.read_csv(file_path)
         data["Email Type"] = data["Email Type"].map(
             {"Safe Email": 0, "Phishing Email": 1}
         )
@@ -197,11 +159,11 @@ if __name__ == "__main__":
     X_train_text, Y_train = preprocessor.load_and_process_data(DATASET_TRAIN_FILE_PATH)
     X_test_text, Y_test = preprocessor.load_and_process_data(DATASET_TEST_FILE_PATH)
 
-    X_train_vec = preprocessor.fit_transform(X_train_text)
-    X_test_vec = preprocessor.transform(X_test_text)
+    X_train_tokens = preprocessor.fit_transform(X_train_text)
+    X_test_tokens = preprocessor.transform(X_test_text)
 
-    X_train = X_train_vec.toarray().T
-    X_test = X_test_vec.toarray().T
+    X_train = X_train_tokens.toarray().T
+    X_test = X_test_tokens.toarray().T
     Y_train = Y_train.reshape(1, -1)
     Y_test = Y_test.reshape(1, -1)
 
@@ -212,7 +174,6 @@ if __name__ == "__main__":
         Y_test,
         num_iterations=1000,
         learning_rate=0.5,
-        print_cost=True,
     )
 
     # save
