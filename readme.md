@@ -8,3 +8,7 @@ SECU73030 course project
 ## Stop words list
 
 `https://countwordsfree.com/stopwords`
+
+## To run
+`pip install -r requirements.txt`
+`python ./main.py`
